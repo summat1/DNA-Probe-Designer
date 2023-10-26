@@ -1,3 +1,7 @@
+h5 {
+    margin: 0;
+}
+
 # Functional Specification
 
 ### Background
