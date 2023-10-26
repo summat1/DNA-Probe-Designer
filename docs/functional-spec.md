@@ -1,6 +1,6 @@
 ## Functional Specification
 
-#### Background
+### Background
 In situ hybridization is a protocol which enables spatial identification of a target nucleic acid sequence within an individual cell. This is achieved via hybridization with detectable oligonucleotides called probes. Our **DNA probe designer** package allows researchers who perform in situ hybridization experiments to create DNA probes with high specificity and binding affinity.
 
 ### User Profile
