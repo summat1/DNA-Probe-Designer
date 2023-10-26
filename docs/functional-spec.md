@@ -1,7 +1,7 @@
-## Functional Specification
+# Functional Specification
 
 ### Background
-In situ hybridization is a protocol which enables spatial identification of a target nucleic acid sequence within an individual cell. This is achieved via hybridization with detectable oligonucleotides called probes. Our **DNA probe designer** package allows researchers who perform in situ hybridization experiments to create DNA probes with high specificity and binding affinity.
+In situ hybridization is a protocol which enables spatial identification of a target nucleic acid sequence within an individual cell. This is achieved via hybridization with detectable oligonucleotides called probes. To ensure accurate results, it is crucial that a probe is highly specific to its target (i.e., does not bind elsewhere in the genome) and binds strongly to its target. Our **DNA probe designer** package allows researchers who perform in situ hybridization experiments to create DNA probes with high specificity and binding affinity.
 
 ### User Profile
 Users of our package will primarily be experimentalists who plan to run in situ hybridization protocols to study the spatial context of genomic regions of interest. Users must have basic familiarity with Python including the ability to import/export files, assign variables, and use functions.
