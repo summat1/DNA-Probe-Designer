@@ -1,7 +1,12 @@
 Joe wants us to add more info about the output - what is shown?
 * What information will the user receive from our library when going through the standard use case?
+--> the optimal probe sequences and the context/info that makes them the optimal choices
+--> graphical + numerical representation
 * How many probes will we recommend to the user?
+--> as many as cross the threshold for compatability
 * What will be the structure of the output? How will we consolidate information to show the user?
+--> preliminar structure is methods that show data + graphs for each probe sequence
+--> further iteration into GUI + pdf-style downloadable report
 
 Also, does this already exist? (Joe doesn't really mind if it does, but good to know anyways)
 Also, what will our reference genome be?
