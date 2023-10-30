@@ -1,0 +1,7 @@
+Joe wants us to add more info about the output - what is shown?
+* What information will the user receive from our library when going through the standard use case?
+* How many probes will we recommend to the user?
+* What will be the structure of the output? How will we consolidate information to show the user?
+
+Also, does this already exist? (Joe doesn't really mind if it does, but good to know anyways)
+Also, what will our reference genome be?
