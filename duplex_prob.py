@@ -5,19 +5,19 @@ from Bio.SeqUtils import GC
 
 ###################################################################################################
 
-def calc_duplex_prob(sam_filename, probeset_filename, temp):
+def calc_duplex_prob(sam_filename, bed_filename, temp):
     '''
     Calculates probability of all probes in a probeset forming a duplex with target sequence at a given temp.
         Arguments:
             - sam_filename [str] : relative path to .sam file containing alignment scores for probe candidates
-            - probeset_filename [str] : relative path to .bed file containing sequences of final probeset
+            - bed_filename [str] : relative path to .bed file containing sequences of final probeset
             - temp [int] : temp at which to predict duplex probability
         Outputs:
             - seqs [np.ndarray] : sequences of probes in probeset
             - probs [np.ndarray] : duplex probabilities of probes in probeset
     '''
     # read in final probeset BED file #
-    with open(probeset_filename) as file:
+    with open(bed_filename) as file:
         probeset = [line.split('\t')[3] for line in file]
 
     # read in SAM file #
@@ -64,3 +64,51 @@ def calc_duplex_prob(sam_filename, probeset_filename, temp):
     seqs = np.array([seq for seq in probeset])
 
     return seqs, probs
+
+###################################################################################################
+
+def plot_duplex_prob(sam_filename, bed_filename, filtering=True, probe_num='all'):
+    '''
+    Plots probabilities of probe forming a duplex with target sequence at all 6 temps.
+        Arguments:
+            - sam_filename [str] : relative path to .sam file containing alignment scores for probe candidates
+            - bed_filename [str] : relative path to .bed file containing sequences of final probeset
+            - filtering [bool] : enable filtering of probes which do not form duplexes at low temps (default = True)
+            - probe_num [int] : choose to plot duplex prob for a single probe (default = 'all')
+    '''
+
+    # collate probabilities #
+    temps = [32, 37, 42, 47, 52, 57]
+    all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp)[1] for temp in temps]
+    all_probs = np.swapaxes(all_probs, 0, 1)
+
+    # filter out probes which do not form duplexes at low temps #
+    if filtering:
+        all_probs = np.array([probs for probs in all_probs if probs[0] > 0.1])
+
+    # plot all probes #
+    if probe_num == 'all':
+        plt.figure(figsize=(8, 6))
+        for k in range(len(all_probs)):
+            plt.plot(temps, all_probs[k])
+        plt.xticks(temps)
+        plt.ylim([-0.075, 1])
+        plt.xlabel('Temperature (C)', size=15)
+        plt.ylabel('Duplex Probability', size=15)
+        plt.title('Probability of Probe forming Duplex with its Target Sequence', size=15)
+        plt.show()
+
+    # single probe #
+    elif type(probe_num) == int:
+        plt.figure(figsize=(8, 6))
+        plt.plot(temps, all_probs[probe_num])
+        plt.xticks(temps)
+        plt.ylim([-0.075, 1])
+        plt.xlabel('Temperature (C)', size=15)
+        plt.ylabel('Duplex Probability', size=15)
+        plt.title('Probability of Probe forming Duplex with its Target Sequence', size=15)
+        plt.show()
+
+    else:
+        print('hey asshole, probe_num argument needs to be \'all\' (to plot all probes) \
+              or an int (to plot a single probe where probe_num corresponds to a line in the .bed file)')
