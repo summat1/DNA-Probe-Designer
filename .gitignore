@@ -1,5 +1,11 @@
 # genomic data (FASTA)
 *.fna
+*.fasta
+*.fastq
+*.bed
+*.sam
+# bowtie2 indices file
+*.bt2
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
