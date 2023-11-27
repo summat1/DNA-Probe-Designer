@@ -46,7 +46,6 @@ import math
 # Import Biopython modules.
 from Bio.SeqUtils import MeltingTemp as mt
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
 from Bio.SeqUtils import GC
 from Bio import SeqIO
 
@@ -617,7 +616,7 @@ class SequenceCrawler:
         while i < int(blockLen) - int(self.l):
             # Print status to terminal.
             if i % 100000 == 0:
-                print '%d of %d' % (i, blockLen)
+                print('%d of %d' % (i, blockLen))
 
             # Find next sequence without an unknown base.
             ncheckval = self.Ncheckopt(self.block[i:i + self.l])
@@ -722,7 +721,7 @@ class SequenceCrawler:
         # Print info about the results to terminal.
         probeNum = len(cands)
         if probeNum == 0:
-            print 'No candidate probes discovered'
+            print('No candidate probes discovered')
         else:
             probeWindow = float((int(cands[-1][1]) - int(cands[0][0]))) / 1000
             probeDensity = float((float(probeNum) / probeWindow))
@@ -965,6 +964,7 @@ def main():
     debugVal = args.Debug
     metaVal = args.Meta
     outNameVal = args.output
+    nn_table = args.nn_table
 
     # Assign concentration variables based on magnitude.
     if args.dnac1 >= args.dnac2:
@@ -978,7 +978,8 @@ def main():
     # Retrieve the stack table. Note that this may give users the opportunity
     # to execute arbitrary code, so better security measures should be employed
     # if this code is ever hosted online.
-    exec ('nn_table = mt.%s' % args.nn_table)
+    #exec ('nn_table = mt.%s' % args.nn_table)
+    nn_table = mt.DNA_NN3
 
     runSequenceCrawler(inputFile, l, L, gcPercent, GCPercent, nn_table, tm, TM,
                        X, sal, form, sp, conc1, conc2, headerVal, bedVal, 
@@ -986,7 +987,7 @@ def main():
                        outNameVal)
 
     # Print wall-clock runtime to terminal.
-    print 'Program took %f seconds' % (timeit.default_timer() - startTime)
+    print('Program took %f seconds' % (timeit.default_timer() - startTime))
 
 
 if __name__ == '__main__':
