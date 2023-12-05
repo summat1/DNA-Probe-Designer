@@ -67,24 +67,49 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
 
 ###################################################################################################
 
-def plot_duplex_prob(sam_filename, bed_filename, filtering=True, probe_num='all'):
+def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
+    '''
+    
+    '''
+    # collate probabilities #
+    temps = [32, 37, 42, 47, 52, 57]
+    with open(bed_filename) as file:
+        seqs = [line.split('\t')[3] for line in file]
+    all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp)[1] for temp in temps]
+    all_probs = list(np.swapaxes(all_probs, 0, 1))
+    print(type(all_probs))
+
+    # filter out probes which do not meet temp / prob thresholds #
+    if type(filter_temp) == int:
+        temp_to_index = {32: 0, 37: 1, 42:2, 47: 3, 52: 4, 57: 5}
+        all_probs = [probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob]
+
+    # for probes which passed filter, write sequences and probabilities to a file #
+    output_filename = bed_filename.split('.')[0] + '_filtered.bed'
+    with open(output_filename, 'w') as file:
+        file.write(f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob} \n')
+        for k, seq, probs in zip(range(len(seqs)), seqs, all_probs):
+            file.write(f'{k+1}, {seq}, {probs:.2f} \n')
+
+###################################################################################################
+
+def plot_duplex_prob(filtered_filename, probe_num='all'):
     '''
     Plots probabilities of probe forming a duplex with target sequence at all 6 temps.
         Arguments:
-            - sam_filename [str] : relative path to .sam file containing alignment scores for probe candidates
-            - bed_filename [str] : relative path to .bed file containing sequences of final probeset
-            - filtering [bool] : enable filtering of probes which do not form duplexes at low temps (default = True)
+            - filtered_filename [str] : relative path to .txt file containing sequences and probabilities for filtered probes
             - probe_num [int] : choose to plot duplex prob for a single probe (default = 'all')
     '''
 
-    # collate probabilities #
+    # read probe sequences and duplex probabilities from filtered .bed file #
+    with open(filtered_filename, 'r') as file:
+        next(file)
+        seqs = [line.split(',')[1].strip() for line in file]
+        all_probs = [line.split(',')[2].strip() for line in file]
     temps = [32, 37, 42, 47, 52, 57]
-    all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp)[1] for temp in temps]
-    all_probs = np.swapaxes(all_probs, 0, 1)
 
-    # filter out probes which do not form duplexes at low temps #
-    if filtering:
-        all_probs = np.array([probs for probs in all_probs if probs[0] > 0.1])
+    print(seqs)
+    print(all_probs)
 
     # plot all probes #
     if probe_num == 'all':
@@ -96,17 +121,21 @@ def plot_duplex_prob(sam_filename, bed_filename, filtering=True, probe_num='all'
         plt.xlabel('Temperature (C)', size=15)
         plt.ylabel('Duplex Probability', size=15)
         plt.title('Probability of Probe forming Duplex with its Target Sequence', size=15)
+        plt.hlines(0.2, 32, 57, label='Sufficient Binding Strength', linestyle='--', color='k')
+        plt.legend()
         plt.show()
 
     # single probe #
     elif type(probe_num) == int:
         plt.figure(figsize=(8, 6))
-        plt.plot(temps, all_probs[probe_num])
+        plt.plot(temps, all_probs[probe_num], label=f'Probe {probe_num}: {seqs[probe_num - 1]}')
         plt.xticks(temps)
         plt.ylim([-0.075, 1])
         plt.xlabel('Temperature (C)', size=15)
         plt.ylabel('Duplex Probability', size=15)
         plt.title('Probability of Probe forming Duplex with its Target Sequence', size=15)
+        plt.hlines(0.2, 32, 57, label='Sufficient Binding Strength', linestyle='--', color='k')
+        plt.legend()
         plt.show()
 
     else:
