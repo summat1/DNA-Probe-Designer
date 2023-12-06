@@ -102,9 +102,22 @@ class DNAProbeDesigner(QMainWindow):
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
     def runScript(self):
-        if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath :
-            fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse-output')
-            samFile = os.path.join(self.outputDirPath, 'bowtie-output')
+        if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
+
+            # path to the fastq file
+            fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output')
+
+            # path to the sam file
+            samFile = os.path.join(self.outputDirPath, 'bowtie_output')
+
+            # path to the folder of indices
+            bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices)
+
+            # path to the bed file
+            bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed')
+
+            # path to the structure check
+            # structureCheckFile = os.path.join(self.outputDirPath, 'structure-check')
 
             # fastq file generation
             try:
@@ -121,8 +134,8 @@ class DNAProbeDesigner(QMainWindow):
             try:
                 command = [
                 "bowtie2",
-                "-x", self.bowtieIndices,  # Use the user-specified index
-                "-U", f"{fastqOutputFile}.fasta",  # Input FASTQ file
+                "-x", bowtiePathArgument,  # Use the user-specified index
+                "-U", fastqOutputFile,  # Input FASTQ file
                 "--no-hd", "-t", "-k", "2", "--local",
                 "-D", "20", "-R", "3", "-N", "1", "-L", "20",
                 "-i", "C,4", "--score-min", "G,1,4",
@@ -131,6 +144,28 @@ class DNAProbeDesigner(QMainWindow):
                 subprocess.run(command, check=True)
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error in bowtie2: {e}")
+
+            try:
+                command = [
+                    "python", "Oligominer/outputClean.py",
+                    "-T", "42",
+                    "-f", samFile
+                    # other arguments could go here
+                ]
+                subprocess.run(command, check=True)
+            except subprocess.CalledProcessError as e:
+                self.statusLabel.setText(f"Error: {e}")
+
+            try:
+                command = [
+                    "python", "Oligominer/structureCheck.py",
+                    "-f", bedFile,
+                    "-t", "0.4"
+                    # other arguments could go here
+                ]
+                subprocess.run(command, check=True)
+            except subprocess.CalledProcessError as e:
+                self.statusLabel.setText(f"Error: {e}")
         else:
             if not self.fastaFilePath:
                 self.statusLabel.setText("No Sequence Selected!")
