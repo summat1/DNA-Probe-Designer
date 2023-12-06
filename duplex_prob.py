@@ -61,9 +61,9 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
     probs = (clf.predict_proba(clf_inputs))[:, 1]
 
     # collate sequences and probs
-    seqs = np.array([seq for seq in probeset])
+    # seqs = np.array([seq for seq in probeset])
 
-    return seqs, probs
+    return probs
 
 ###################################################################################################
 
@@ -75,9 +75,8 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     temps = [32, 37, 42, 47, 52, 57]
     with open(bed_filename) as file:
         seqs = [line.split('\t')[3] for line in file]
-    all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp)[1] for temp in temps]
-    all_probs = list(np.swapaxes(all_probs, 0, 1))
-    print(type(all_probs))
+    all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp) for temp in temps]
+    all_probs = np.swapaxes(all_probs, 0, 1)
 
     # filter out probes which do not meet temp / prob thresholds #
     if type(filter_temp) == int:
@@ -89,7 +88,7 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     with open(output_filename, 'w') as file:
         file.write(f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob} \n')
         for k, seq, probs in zip(range(len(seqs)), seqs, all_probs):
-            file.write(f'{k+1}, {seq}, {probs:.2f} \n')
+            file.write(f'{k+1}, {seq}, {[round(prob, 8) for prob in probs]} \n')
 
 ###################################################################################################
 
@@ -105,11 +104,14 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
     with open(filtered_filename, 'r') as file:
         next(file)
         seqs = [line.split(',')[1].strip() for line in file]
-        all_probs = [line.split(',')[2].strip() for line in file]
-    temps = [32, 37, 42, 47, 52, 57]
+    with open(filtered_filename, 'r') as file:
+        next(file)
+        all_probs = [line.split(',')[2:] for line in file]
+    
+    # formatting probs back to floats because im bad at coding
+    all_probs = [[float(prob.strip(' [').strip('] \n')) for prob in probs] for probs in all_probs]
 
-    print(seqs)
-    print(all_probs)
+    temps = [32, 37, 42, 47, 52, 57]
 
     # plot all probes #
     if probe_num == 'all':

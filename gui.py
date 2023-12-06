@@ -122,7 +122,7 @@ class DNAProbeDesigner(QMainWindow):
                 command = [
                 "bowtie2",
                 "-x", self.bowtieIndices,  # Use the user-specified index
-                "-U", f"{fastqOutputFile}.fasta",  # Input FASTQ file
+                "-U", f"{fastqOutputFile}.fastq",  # Input FASTQ file
                 "--no-hd", "-t", "-k", "2", "--local",
                 "-D", "20", "-R", "3", "-N", "1", "-L", "20",
                 "-i", "C,4", "--score-min", "G,1,4",
