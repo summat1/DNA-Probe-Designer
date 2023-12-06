@@ -480,7 +480,7 @@ def main():
                 reportVal, debugVal, metaVal, outNameVal, startTime)
 
     # Print wall-clock runtime to terminal.
-    print 'Program took %f seconds' % (timeit.default_timer() - startTime)
+    print('Program took %f seconds' % (timeit.default_timer() - startTime))
 
 if __name__ == '__main__':
     main()

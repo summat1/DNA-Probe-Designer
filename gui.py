@@ -105,16 +105,16 @@ class DNAProbeDesigner(QMainWindow):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
 
             # path to the fastq file
-            fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output')
+            fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output').replace('\\', '/')
 
             # path to the sam file
-            samFile = os.path.join(self.outputDirPath, 'bowtie_output')
+            samFile = os.path.join(self.outputDirPath, 'bowtie_output.sam').replace('\\', '/')
 
             # path to the folder of indices
-            bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices)
+            bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices).replace('\\', '/')
 
             # path to the bed file
-            bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed')
+            bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed').replace('\\', '/')
 
             # path to the structure check
             # structureCheckFile = os.path.join(self.outputDirPath, 'structure-check')
@@ -134,14 +134,14 @@ class DNAProbeDesigner(QMainWindow):
             try:
                 command = [
                 "bowtie2",
-                "-x", self.bowtieIndices,  # Use the user-specified index
-                "-U", f"{fastqOutputFile}.fasta",  # Input FASTQ file
+                "-x", bowtiePathArgument,  # Use the user-specified index
+                "-U", f"{fastqOutputFile}.fastq",  # Input FASTQ file
                 "--no-hd", "-t", "-k", "2", "--local",
                 "-D", "20", "-R", "3", "-N", "1", "-L", "20",
                 "-i", "C,4", "--score-min", "G,1,4",
                 "-S", samFile  # Output SAM file
                 ]
-                subprocess.run(command, check=True)
+                subprocess.run(command, check=True, shell=True)
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error in bowtie2: {e}")
 
