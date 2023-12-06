@@ -99,7 +99,7 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
     '''
     Plots probabilities of probe forming a duplex with target sequence at all 6 temps.
         Arguments:
-            - filtered_filename [str] : relative path to .bed file containing sequences and probabilities for filtered probes
+            - filtered_filename [str] : relative path to .txt file containing sequences and probabilities for filtered probes
             - probe_num [int] : choose to plot duplex prob for a single probe (default = 'all')
     '''
 
