@@ -238,16 +238,16 @@ class DNAProbeDesigner(QMainWindow):
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error: {e}")
 
-            try:
-                command = [
-                    "python", "Oligominer/structureCheck.py",
-                    "-f", self.bedFile,
-                    "-t", "0.4"
-                    # other arguments could go here
-                ]
-                subprocess.run(command, check=True)
-            except subprocess.CalledProcessError as e:
-                self.statusLabel.setText(f"Error: {e}")
+            # try:
+            #     command = [
+            #         "python", "Oligominer/structureCheck.py",
+            #         "-f", self.bedFile,
+            #         "-t", "0.4"
+            #         # other arguments could go here
+            #     ]
+            #     subprocess.run(command, check=True)
+            # except subprocess.CalledProcessError as e:
+            #     self.statusLabel.setText(f"Error: {e}")
         else:
             if not self.fastaFilePath:
                 self.statusLabel.setText("No Sequence Selected!")
