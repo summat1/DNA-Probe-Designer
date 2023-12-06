@@ -13,7 +13,6 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
             - bed_filename [str] : relative path to .bed file containing sequences of final probeset
             - temp [int] : temp at which to predict duplex probability
         Outputs:
-            - seqs [np.ndarray] : sequences of probes in probeset
             - probs [np.ndarray] : duplex probabilities of probes in probeset
     '''
     # read in final probeset BED file #
@@ -60,16 +59,20 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
     # predict probabilities (results are [prob_no_dup, prob_dup]) #
     probs = (clf.predict_proba(clf_inputs))[:, 1]
 
-    # collate sequences and probs
-    # seqs = np.array([seq for seq in probeset])
-
     return probs
 
 ###################################################################################################
 
 def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     '''
-    
+    Filters probes based on user-specified duplex probability at one of six user-specified temperatures.
+    Writes filtered probe sequences and duplex probabilities to new .bed file.
+        Arguments:
+            - sam_filename [str] : relative path to .sam file containing alignment scores for probe candidates
+            - bed_filename [str] : relative path to .bed file containing sequences of final probeset
+            - filter_temp [int] : one of [32, 37, 42, 47, 52, 57] specifying temperature to set probability filter at
+            - filter_prob [float] : duplex probability to filter by
+
     '''
     # collate probabilities #
     temps = [32, 37, 42, 47, 52, 57]
