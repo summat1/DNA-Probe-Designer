@@ -164,8 +164,6 @@ class DNAProbeDesigner(QMainWindow):
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
     def runFilterProbes(self):
-        self.samFile = "C:/Users/shivm/Downloads/bowtie_output.sam"
-        self.bedFile = "C:/Users/shivm/Downloads/bowtie_output_probes.bed"
         if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
             filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
             part_1, part_2, part_3 = self.bedFile.partition('.')
