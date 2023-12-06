@@ -1,4 +1,5 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit, QComboBox
+from PyQt6.QtGui import QDoubleValidator
 import sys
 import subprocess
 import os
@@ -9,13 +10,29 @@ class DNAProbeDesigner(QMainWindow):
 
         # Main Window setup
         self.setWindowTitle("DNA Probe Designer")
-        self.setGeometry(100, 100, 550, 300)  # Adjusted for additional text
+        self.setGeometry(100, 100, 550, 300)
 
-        # Layout
-        layout = QVBoxLayout()
-        
+        # Main tab widget
+        self.tabs = QTabWidget(self)
+        self.setCentralWidget(self.tabs)
+
+        # Create tabs
+        self.dnaProbeTab = QWidget()
+        self.plottingTab = QWidget()
+
+        # Add tabs
+        self.tabs.addTab(self.dnaProbeTab, "DNA Probe Design")
+        self.tabs.addTab(self.plottingTab, "Analysis and Plotting")
+
+        # Setup each tab
+        self.setupDnaProbeTab()
+        self.setupPlottingTab()
+
+    def setupDnaProbeTab(self):
+        layout = QVBoxLayout(self.dnaProbeTab)
+
         # Welcome Label
-        self.welcomeLabel = QLabel("Welcome to the DNA Probe Designer! To get started, please complete the 3 setup steps below:", self)
+        self.welcomeLabel = QLabel("Welcome to the DNA Probe Designer! To get started, please complete the 4 setup steps below:", self)
         self.welcomeLabel.setWordWrap(True)
 
         # Step 1 - Select FASTA Attachment Label + Button
@@ -37,9 +54,8 @@ class DNAProbeDesigner(QMainWindow):
         self.typeBowtieName.setPlaceholderText("Enter Bowtie2 name")
         self.typeBowtieName.textChanged.connect(self.updateBowtieIndexName)
 
-
         # Step 4 - Select Output Directory Label + Button
-        self.outputDirLabel = QLabel("Output Directory: Not selected", self)
+        self.outputDirLabel = QLabel("Step 4: Select Output Directory.", self)
         self.outputDirLabel.setWordWrap(True)
         self.outputDirBtn = QPushButton("Select Output Directory", self)
         self.outputDirBtn.clicked.connect(self.selectOutputDirectory)
@@ -52,6 +68,14 @@ class DNAProbeDesigner(QMainWindow):
     
         # Run Button
         self.runBtn = QPushButton("Run Probe Design", self)
+        self.runBtn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #ADD8E6;
+            }""")
         self.runBtn.clicked.connect(self.runScript)
 
         # Status Label
@@ -75,10 +99,30 @@ class DNAProbeDesigner(QMainWindow):
         layout.addWidget(self.runBtn)
         layout.addWidget(self.statusLabel)
 
-        # Set central widget and layout
-        centralWidget = QWidget()
-        centralWidget.setLayout(layout)
-        self.setCentralWidget(centralWidget)
+    def setupPlottingTab(self):
+        layout = QVBoxLayout(self.plottingTab)
+
+        # Dropdown for temperature
+        self.temperatureDropdown = QComboBox(self.plottingTab)
+        self.temperatureDropdown.addItems(['37', '42', '47', '52', '57'])
+        layout.addWidget(self.temperatureDropdown)
+
+        # Input for probability
+        self.probabilityInput = QLineEdit(self.plottingTab)
+        self.probabilityInput.setValidator(QDoubleValidator(0.0, 1.0, 10))
+        self.probabilityInput.setPlaceholderText("Enter probability (0 - 1)")
+    
+        # Run button
+        self.runButton = QPushButton("Filter Probes", self.plottingTab)
+        #self.runButton.clicked.connect(self.filterProbes)
+    
+        # Plot button
+        self.plotButton = QPushButton("Plot Results", self.plottingTab)
+        #self.plotButton.clicked.connect(self.plotResults)
+    
+        layout.addWidget(self.probabilityInput)
+        layout.addWidget(self.runButton)
+        layout.addWidget(self.plotButton)
 
     def openFileNameDialog(self):
         fastaFileName, _ = QFileDialog.getOpenFileName(self, "Select a FASTA file", "", "FASTA Files (*.fasta);;All Files (*)")
@@ -115,9 +159,6 @@ class DNAProbeDesigner(QMainWindow):
 
             # path to the bed file
             bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed')
-
-            # path to the structure check
-            # structureCheckFile = os.path.join(self.outputDirPath, 'structure-check')
 
             # fastq file generation
             try:
