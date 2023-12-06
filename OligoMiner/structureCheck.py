@@ -52,7 +52,7 @@ from subprocess import PIPE, Popen
 
 # Import Biopython modules.
 from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
+# from Bio.Alphabet import IUPAC
 
 class StructureChecker:
     def __init__(self, inputFile, formConc, saltConc, NUPACKmat, threshVal,
@@ -101,9 +101,9 @@ class StructureChecker:
             if stdout_lines[i] == '% Probability:\n':
                 prob_val = float(stdout_lines[i + 1])
         if prob_val == None:
-            print '***********************************************************'
-            print 'NUPACK ERROR: could not run prob command with these inputs.'
-            print '***********************************************************'
+            print('***********************************************************')
+            print('NUPACK ERROR: could not run prob command with these inputs.')
+            print('***********************************************************')
         os.remove('%s_%s_%0.0f_%d_prob_temp.in' \
                   % (self.fileName, self.IDval, self.Temp, randomInt))
         return prob_val
@@ -203,9 +203,9 @@ class StructureChecker:
         candsNum = len(file_read)
         cleanNum = len(outList)
         if 'rna' in self.NUPACKmat:
-            print '********************************************************************************'
-            print 'NUPACK WARNING: No salt corrections available for RNA.  Using 1 M Na and 0 M Mg.'
-            print '********************************************************************************'
+            print('********************************************************************************')
+            print('NUPACK WARNING: No salt corrections available for RNA.  Using 1 M Na and 0 M Mg.')
+            print('********************************************************************************')
         print('structureCheck predicted that %d of %d / %0.4f%% candidate '
               'probes are predicted to have a linear structure with p>%0.4f at '
               '%dC in %d mM Na+ and %d%% formamide' \
@@ -374,7 +374,7 @@ def main():
                         outNameVal, startTime)
 
     # Print wall-clock runtime to terminal.
-    print 'Program took %f seconds' % (timeit.default_timer() - startTime)
+    print('Program took %f seconds' % (timeit.default_timer() - startTime))
 
 
 if __name__ == '__main__':
