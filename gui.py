@@ -1,4 +1,6 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit, QComboBox
+from PyQt6.QtGui import QDoubleValidator
+from duplex_prob import filter_duplex_prob, plot_duplex_prob
 import sys
 import subprocess
 import os
@@ -9,13 +11,29 @@ class DNAProbeDesigner(QMainWindow):
 
         # Main Window setup
         self.setWindowTitle("DNA Probe Designer")
-        self.setGeometry(100, 100, 550, 300)  # Adjusted for additional text
+        self.setGeometry(100, 100, 550, 300)
 
-        # Layout
-        layout = QVBoxLayout()
-        
+        # Main tab widget
+        self.tabs = QTabWidget(self)
+        self.setCentralWidget(self.tabs)
+
+        # Create tabs
+        self.dnaProbeTab = QWidget()
+        self.plottingTab = QWidget()
+
+        # Add tabs
+        self.tabs.addTab(self.dnaProbeTab, "DNA Probe Design")
+        self.tabs.addTab(self.plottingTab, "Analysis and Plotting")
+
+        # Setup each tab
+        self.setupDnaProbeTab()
+        self.setupPlottingTab()
+
+    def setupDnaProbeTab(self):
+        layout = QVBoxLayout(self.dnaProbeTab)
+
         # Welcome Label
-        self.welcomeLabel = QLabel("Welcome to the DNA Probe Designer! To get started, please complete the 3 setup steps below:", self)
+        self.welcomeLabel = QLabel("Welcome to the DNA Probe Designer! To get started, please complete the 4 setup steps below:", self)
         self.welcomeLabel.setWordWrap(True)
 
         # Step 1 - Select FASTA Attachment Label + Button
@@ -37,9 +55,8 @@ class DNAProbeDesigner(QMainWindow):
         self.typeBowtieName.setPlaceholderText("Enter Bowtie2 name")
         self.typeBowtieName.textChanged.connect(self.updateBowtieIndexName)
 
-
         # Step 4 - Select Output Directory Label + Button
-        self.outputDirLabel = QLabel("Output Directory: Not selected", self)
+        self.outputDirLabel = QLabel("Step 4: Select Output Directory.", self)
         self.outputDirLabel.setWordWrap(True)
         self.outputDirBtn = QPushButton("Select Output Directory", self)
         self.outputDirBtn.clicked.connect(self.selectOutputDirectory)
@@ -49,9 +66,22 @@ class DNAProbeDesigner(QMainWindow):
         self.bowtieDirPath = ""
         self.bowtieIndices = ""
         self.outputDirPath = ""
+        self.filteredProbeFile = ""
+        self.samFile = ""
+        self.bedFile = ""
+        self.filterTemp = ""
+        self.filterProb = ""
     
         # Run Button
         self.runBtn = QPushButton("Run Probe Design", self)
+        self.runBtn.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #ADD8E6;
+            }""")
         self.runBtn.clicked.connect(self.runScript)
 
         # Status Label
@@ -75,10 +105,39 @@ class DNAProbeDesigner(QMainWindow):
         layout.addWidget(self.runBtn)
         layout.addWidget(self.statusLabel)
 
-        # Set central widget and layout
-        centralWidget = QWidget()
-        centralWidget.setLayout(layout)
-        self.setCentralWidget(centralWidget)
+    def setupPlottingTab(self):
+        layout = QVBoxLayout(self.plottingTab)
+
+        # Dropdown for temperature
+        self.temperatureLabel = QLabel("Select Desired Temperature Cutoff:", self)
+        self.temperatureLabel.setWordWrap(True)
+        self.temperatureDropdown = QComboBox(self.plottingTab)
+        self.temperatureDropdown.addItems(['37', '42', '47', '52', '57'])
+        self.temperatureDropdown.currentTextChanged.connect(self.updateSelectedTemperature)
+
+        # Input for probability
+        self.probabilityLabel = QLabel("Select Desired Duplex Probability:", self)
+        self.probabilityLabel.setWordWrap(True)
+        self.probabilityInput = QLineEdit(self.plottingTab)
+        self.probabilityInput.setValidator(QDoubleValidator(0.0, 1.0, 10))
+        self.probabilityInput.setPlaceholderText("Enter probability (0 - 1)")
+        self.probabilityInput.textChanged.connect(self.updateEnteredProbability)
+    
+        # Run button
+        self.runButton = QPushButton("Filter Probes", self.plottingTab)
+        self.runButton.clicked.connect(self.runFilterProbes)
+    
+        # Plot button
+        self.plotButton = QPushButton("Plot Results", self.plottingTab)
+        self.plotButton.clicked.connect(self.plotResults)
+
+        layout.addWidget(self.outputDirLabel)
+        layout.addWidget(self.temperatureLabel)
+        layout.addWidget(self.temperatureDropdown)
+        layout.addWidget(self.probabilityLabel)
+        layout.addWidget(self.probabilityInput)
+        layout.addWidget(self.runButton)
+        layout.addWidget(self.plotButton)
 
     def openFileNameDialog(self):
         fastaFileName, _ = QFileDialog.getOpenFileName(self, "Select a FASTA file", "", "FASTA Files (*.fasta);;All Files (*)")
@@ -101,6 +160,25 @@ class DNAProbeDesigner(QMainWindow):
             self.outputDirPath = outputDir
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
+    def runFilterProbes(self):
+        filtered_probes = filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
+        self.filteredProbeFile = f"{self.outputDirPath}/filtered_probes.bed"
+        with open(self.filteredProbeFile, 'w') as file:
+            file.write(filtered_probes)
+    
+    def plotResults(self):
+        plot_duplex_prob(self.filteredProbeFile)
+
+    def updateSelectedTemperature(self, text):
+        self.filterTemp = text
+
+    def updateEnteredProbability(self, text):
+        try:
+            self.filterProb = float(text) if text else None
+        except ValueError:
+            self.filterProb = None
+            print("Invalid probability entered.")
+    
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
 
@@ -108,16 +186,13 @@ class DNAProbeDesigner(QMainWindow):
             fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output').replace('\\', '/')
 
             # path to the sam file
-            samFile = os.path.join(self.outputDirPath, 'bowtie_output.sam').replace('\\', '/')
+            self.samFile = os.path.join(self.outputDirPath, 'bowtie_output.sam').replace('\\', '/')
 
             # path to the folder of indices
             bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices).replace('\\', '/')
 
             # path to the bed file
-            bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed').replace('\\', '/')
-
-            # path to the structure check
-            # structureCheckFile = os.path.join(self.outputDirPath, 'structure-check')
+            self.bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed').replace('\\', '/')
 
             # fastq file generation
             try:
@@ -139,7 +214,7 @@ class DNAProbeDesigner(QMainWindow):
                 "--no-hd", "-t", "-k", "2", "--local",
                 "-D", "20", "-R", "3", "-N", "1", "-L", "20",
                 "-i", "C,4", "--score-min", "G,1,4",
-                "-S", samFile  # Output SAM file
+                "-S", self.samFile  # Output SAM file
                 ]
                 subprocess.run(command, check=True, shell=True)
             except subprocess.CalledProcessError as e:
@@ -149,7 +224,7 @@ class DNAProbeDesigner(QMainWindow):
                 command = [
                     "python", "Oligominer/outputClean.py",
                     "-T", "42",
-                    "-f", samFile
+                    "-f", self.samFile
                     # other arguments could go here
                 ]
                 subprocess.run(command, check=True)
@@ -159,7 +234,7 @@ class DNAProbeDesigner(QMainWindow):
             try:
                 command = [
                     "python", "Oligominer/structureCheck.py",
-                    "-f", bedFile,
+                    "-f", self.bedFile,
                     "-t", "0.4"
                     # other arguments could go here
                 ]
@@ -175,7 +250,8 @@ class DNAProbeDesigner(QMainWindow):
                 self.statusLabel.setText("Bowtie Indices Name Not Specified!")
             elif not self.outputDirPath:
                 self.statusLabel.setText("Output Directory Not Selected!")
-            
+    
+    
 # Main loop
 app = QApplication(sys.argv)
 mainWindow = DNAProbeDesigner()
