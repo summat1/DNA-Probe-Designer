@@ -112,7 +112,7 @@ class DNAProbeDesigner(QMainWindow):
         self.temperatureLabel = QLabel("Select Desired Temperature Cutoff:", self)
         self.temperatureLabel.setWordWrap(True)
         self.temperatureDropdown = QComboBox(self.plottingTab)
-        self.temperatureDropdown.addItems(['37', '42', '47', '52', '57'])
+        self.temperatureDropdown.addItems(['Select', '37', '42', '47', '52', '57'])
         self.temperatureDropdown.currentTextChanged.connect(self.updateSelectedTemperature)
 
         # Input for probability
@@ -131,13 +131,16 @@ class DNAProbeDesigner(QMainWindow):
         self.plotButton = QPushButton("Plot Results", self.plottingTab)
         self.plotButton.clicked.connect(self.plotResults)
 
-        layout.addWidget(self.outputDirLabel)
+        # Status
+        self.plotStatusLabel = QLabel("", self)
+
         layout.addWidget(self.temperatureLabel)
         layout.addWidget(self.temperatureDropdown)
         layout.addWidget(self.probabilityLabel)
         layout.addWidget(self.probabilityInput)
         layout.addWidget(self.runButton)
         layout.addWidget(self.plotButton)
+        layout.addWidget(self.plotStatusLabel)
 
     def openFileNameDialog(self):
         fastaFileName, _ = QFileDialog.getOpenFileName(self, "Select a FASTA file", "", "FASTA Files (*.fasta);;All Files (*)")
@@ -161,10 +164,17 @@ class DNAProbeDesigner(QMainWindow):
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
     def runFilterProbes(self):
-        filtered_probes = filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
-        self.filteredProbeFile = f"{self.outputDirPath}/filtered_probes.bed"
-        with open(self.filteredProbeFile, 'w') as file:
-            file.write(filtered_probes)
+        if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
+            filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
+            part_1, part_2, part_3 = self.bedFile.partition('.')
+            self.filteredProbeFile = f"{part_1}_filtered{part_2}{part_3}"
+            self.plotStatusLabel.setText("Filtered Probes Successfully!")
+        elif not self.samFile or not self.bedFile:
+            self.plotStatusLabel.setText("Please Design Probes First!")
+        elif not self.filterTemp:
+            self.plotStatusLabel.setText("Please Select Temp!")
+        elif not self.filterProb:
+            self.plotStatusLabel.setText("Please Select Duplex Probability!")
     
     def plotResults(self):
         plot_duplex_prob(self.filteredProbeFile)
@@ -181,16 +191,12 @@ class DNAProbeDesigner(QMainWindow):
     
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
-
             # path to the fastq file
             fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output').replace('\\', '/')
-
             # path to the sam file
             self.samFile = os.path.join(self.outputDirPath, 'bowtie_output.sam').replace('\\', '/')
-
             # path to the folder of indices
             bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices).replace('\\', '/')
-
             # path to the bed file
             self.bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed').replace('\\', '/')
 
