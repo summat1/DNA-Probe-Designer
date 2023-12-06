@@ -91,7 +91,7 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     with open(output_filename, 'w') as file:
         file.write(f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob} \n')
         for k, seq, probs in zip(range(len(seqs)), seqs, all_probs):
-            file.write(f'{k+1}, {seq}, {[round(prob, 8) for prob in probs]} \n')
+            file.write(f'{k+1} \t {seq} \t {[round(prob, 8) for prob in probs]} \n')
 
 ###################################################################################################
 
@@ -106,14 +106,16 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
     # read probe sequences and duplex probabilities from filtered .bed file #
     with open(filtered_filename, 'r') as file:
         next(file)
-        seqs = [line.split(',')[1].strip() for line in file]
+        seqs = [line.split('\t')[1].strip() for line in file]
     with open(filtered_filename, 'r') as file:
         next(file)
-        all_probs = [line.split(',')[2:] for line in file]
+        all_probs = [line.split('\t')[2:] for line in file]
     
     # formatting probs back to floats because im bad at coding
+    all_probs = [probs[0].split(',') for probs in all_probs]
     all_probs = [[float(prob.strip(' [').strip('] \n')) for prob in probs] for probs in all_probs]
 
+    # set temps
     temps = [32, 37, 42, 47, 52, 57]
 
     # plot all probes #
