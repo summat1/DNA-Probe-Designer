@@ -5,13 +5,14 @@ import sys
 import subprocess
 import os
 
+# graphical user interface (gui) for DNA probe design
 class DNAProbeDesigner(QMainWindow):
     def __init__(self):
         super().__init__()
 
         # Main Window setup
         self.setWindowTitle("DNA Probe Designer")
-        self.setGeometry(100, 100, 550, 300)
+        self.setGeometry(100, 100, 550, 450)
 
         # Main tab widget
         self.tabs = QTabWidget(self)
@@ -215,12 +216,12 @@ class DNAProbeDesigner(QMainWindow):
             try:
                 command = [
                 "bowtie2",
-                "-x", bowtiePathArgument,  # Use the user-specified index
-                "-U", f"{fastqOutputFile}.fastq",  # Input FASTQ file
+                "-x", bowtiePathArgument,  # indices specified
+                "-U", f"{fastqOutputFile}.fastq",  # fastq file
                 "--no-hd", "-t", "-k", "2", "--local",
                 "-D", "20", "-R", "3", "-N", "1", "-L", "20",
                 "-i", "C,4", "--score-min", "G,1,4",
-                "-S", self.samFile  # Output SAM file
+                "-S", self.samFile  # output SAM file
                 ]
                 subprocess.run(command, check=True, shell=True)
             except subprocess.CalledProcessError as e:
