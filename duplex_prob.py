@@ -82,9 +82,8 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     all_probs = np.swapaxes(all_probs, 0, 1)
 
     # filter out probes which do not meet temp / prob thresholds #
-    if type(filter_temp) == int:
-        temp_to_index = {32: 0, 37: 1, 42:2, 47: 3, 52: 4, 57: 5}
-        all_probs = [probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob]
+    temp_to_index = {32: 0, 37: 1, 42:2, 47: 3, 52: 4, 57: 5}
+    all_probs = [probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob]
 
     # for probes which passed filter, write sequences and probabilities to a file #
     output_filename = bed_filename.split('.')[0] + '_filtered.bed'
