@@ -147,6 +147,7 @@ class DNAProbeDesigner(QMainWindow):
         fastaFileName, _ = QFileDialog.getOpenFileName(self, "Select a FASTA file", "", "FASTA Files (*.fasta);;All Files (*)")
         if fastaFileName:
             self.fastaFilePath = fastaFileName
+            self.fastaFileName = os.path.basename(self.fastaFilePath).split('.')[0]
             self.fastaLabel.setText(f"FASTA attachment: {fastaFileName}")
 
     def selectBowtieDirectory(self):
@@ -167,8 +168,7 @@ class DNAProbeDesigner(QMainWindow):
     def runFilterProbes(self):
         if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
             filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
-            part_1, part_2, part_3 = self.bedFile.partition('.')
-            self.filteredProbeFile = f"{part_1}_filtered{part_2}{part_3}"
+            self.filteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_filtered.bed'
             self.plotStatusLabel.setText("Filtered Probes Successfully!")
         elif not self.samFile or not self.bedFile:
             self.plotStatusLabel.setText("Please Design Probes First!")
@@ -192,14 +192,15 @@ class DNAProbeDesigner(QMainWindow):
     
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
+            
             # path to the fastq file
-            fastqOutputFile = os.path.join(self.outputDirPath, 'blockParse_output').replace('\\', '/')
+            fastqOutputFile = os.path.join(self.outputDirPath, self.fastaFileName).replace('\\', '/')
             # path to the sam file
-            self.samFile = os.path.join(self.outputDirPath, 'bowtie_output.sam').replace('\\', '/')
+            self.samFile = os.path.join(self.outputDirPath, f'{self.fastaFileName}.sam').replace('\\', '/')
             # path to the folder of indices
             bowtiePathArgument = os.path.join(self.bowtieDirPath, self.bowtieIndices).replace('\\', '/')
             # path to the bed file
-            self.bedFile = os.path.join(self.outputDirPath, 'bowtie_output_probes.bed').replace('\\', '/')
+            self.bedFile = os.path.join(self.outputDirPath, f'{self.fastaFileName}_probes.bed').replace('\\', '/')
 
             # fastq file generation
             try:
@@ -238,16 +239,6 @@ class DNAProbeDesigner(QMainWindow):
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error: {e}")
 
-            # try:
-            #     command = [
-            #         "python", "Oligominer/structureCheck.py",
-            #         "-f", self.bedFile,
-            #         "-t", "0.4"
-            #         # other arguments could go here
-            #     ]
-            #     subprocess.run(command, check=True)
-            # except subprocess.CalledProcessError as e:
-            #     self.statusLabel.setText(f"Error: {e}")
         else:
             if not self.fastaFilePath:
                 self.statusLabel.setText("No Sequence Selected!")

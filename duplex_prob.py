@@ -24,7 +24,7 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
         sam = [line for line in file]
 
     # set up LDA model to predict duplex probability based on probe length, GC content, and alignment score to target seq #
-    # Values from models published in Beliveau, et al. (2018) paper. #
+    # Values from models published in Beliveau, et al. (2018) #
     temps = np.array([32, 37, 42, 47, 52, 57])
     if temp not in temps:
         print(f'hey asshole, temp has to be one of {temps}')
@@ -87,9 +87,11 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     all_probs = [probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob]
 
     # for probes which passed filter, write sequences and probabilities to a file #
-    output_filename = bed_filename.split('.')[0] + '_filtered.bed'
+    output_filename = bed_filename.split('.')[0] + '_pDup_filtered.bed'
     with open(output_filename, 'w') as file:
+        # header line #
         file.write(f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob} \n')
+        # write as probe_number, probe_sequence, and duplex_probabilities #
         for k, seq, probs in zip(range(len(seqs)), seqs, all_probs):
             file.write(f'{k+1} \t {seq} \t {[round(prob, 8) for prob in probs]} \n')
 
