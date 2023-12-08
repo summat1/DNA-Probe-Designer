@@ -211,7 +211,7 @@ class DNAProbeDesigner(QMainWindow):
         if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
             filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
             self.filteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_filtered.bed'
-            filter_secondary_structure(self.filteredProbeFile, float(self.mfeInput.text))
+            filter_secondary_structure(self.filteredProbeFile, self.filterMFE)
             self.plotStatusLabel.setText("Filtered Probes Successfully!")
         elif not self.samFile or not self.bedFile:
             self.plotStatusLabel.setText("Please Design Probes First!")
