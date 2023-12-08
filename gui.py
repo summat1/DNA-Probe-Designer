@@ -238,7 +238,7 @@ class DNAProbeDesigner(QMainWindow):
             self.filterMFE = float(text) if text else None
         except ValueError:
             self.filterMFE = None
-            self.mfeLabel.setPlaceholderText("Please Enter A Float Between 0 and 1")
+            self.mfeInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
     
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
