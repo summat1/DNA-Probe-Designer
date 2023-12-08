@@ -11,59 +11,56 @@ class DNAProbeDesigner(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Main Window setup
+        # main window setup
         self.setWindowTitle("DNA Probe Designer")
         self.setGeometry(100, 100, 550, 450)
 
-        # Main tab widget
+        # main tab widget
         self.tabs = QTabWidget(self)
         self.setCentralWidget(self.tabs)
 
-        # Create tabs
+        # two tabs
         self.dnaProbeTab = QWidget()
         self.plottingTab = QWidget()
-
-        # Add tabs
         self.tabs.addTab(self.dnaProbeTab, "DNA Probe Design")
         self.tabs.addTab(self.plottingTab, "Analysis and Plotting")
-
-        # Setup each tab
         self.setupDnaProbeTab()
         self.setupPlottingTab()
 
+    # function to set up the DNA probe design tab
     def setupDnaProbeTab(self):
         layout = QVBoxLayout(self.dnaProbeTab)
 
-        # Welcome Label
+        # welcome label
         self.welcomeLabel = QLabel("Welcome to the DNA Probe Designer! To get started, please complete the 4 setup steps below:", self)
         self.welcomeLabel.setWordWrap(True)
 
-        # Step 1 - Select FASTA Attachment Label + Button
+        # step 1 - Select FASTA Attachment Label + Button
         self.fastaLabel = QLabel("Step 1: Attach target sequence.", self)
         self.fastaLabel.setWordWrap(True)
         self.attachFastaFileBtn = QPushButton("Attach .fasta", self)
         self.attachFastaFileBtn.clicked.connect(self.openFileNameDialog)
 
-        # Step 2 - Specify Bowtie Indices Label + Button
+        # step 2 - Specify Bowtie Indices Label + Button
         self.bowtieLabel = QLabel("Step 2: Select path to Bowtie indices.", self)
         self.bowtieLabel.setWordWrap(True)
         self.selectBowtieDir = QPushButton("Specify path to indices", self)
         self.selectBowtieDir.clicked.connect(self.selectBowtieDirectory)
 
-        # Step 3 - Specify Bowtie Filename
+        # step 3 - Specify Bowtie Filename
         self.bowtieName = QLabel("Step 3: Specify Bowtie filename.", self)
         self.bowtieName.setWordWrap(True)
         self.typeBowtieName = QLineEdit(self)
         self.typeBowtieName.setPlaceholderText("Enter Bowtie2 name")
         self.typeBowtieName.textChanged.connect(self.updateBowtieIndexName)
 
-        # Step 4 - Select Output Directory Label + Button
+        # step 4 - Select Output Directory Label + Button
         self.outputDirLabel = QLabel("Step 4: Select Output Directory.", self)
         self.outputDirLabel.setWordWrap(True)
         self.outputDirBtn = QPushButton("Select Output Directory", self)
         self.outputDirBtn.clicked.connect(self.selectOutputDirectory)
         
-        # Progress Bar
+        # progress bar
         self.progressBar = QProgressBar(self)
         self.progressBar.setMinimum(0)
         self.progressBar.setMaximum(100)
@@ -80,19 +77,20 @@ class DNAProbeDesigner(QMainWindow):
             }
         """)
        
-        # Variable to store the paths
+        # variables to store the paths so that we can change them and know when they have been changed
         self.fastaFilePath = ""
         self.bowtieDirPath = ""
         self.bowtieIndices = ""
         self.outputDirPath = ""
         self.filteredProbeFile = ""
+        self.mfeFilteredProbeFile = ""
         self.samFile = ""
         self.bedFile = ""
         self.filterTemp = ""
         self.filterProb = ""
-        self.filterMFE = 0
+        self.filterMFE = ""
     
-        # Run Button
+        # run probe design
         self.runBtn = QPushButton("Run Probe Design", self)
         self.runBtn.setStyleSheet("""
             QPushButton {
@@ -104,40 +102,35 @@ class DNAProbeDesigner(QMainWindow):
             }""")
         self.runBtn.clicked.connect(self.runScript)
 
-        # Status Label
+        # status to inform user on what the issue is
         self.statusLabel = QLabel("", self)
 
-        # Adding widgets to the layout
+        # adding widgets to the layout
         layout.addWidget(self.welcomeLabel)
-
         layout.addWidget(self.fastaLabel)
         layout.addWidget(self.attachFastaFileBtn)
-
         layout.addWidget(self.bowtieLabel)
         layout.addWidget(self.selectBowtieDir)
-
         layout.addWidget(self.bowtieName)
         layout.addWidget(self.typeBowtieName)
-
         layout.addWidget(self.outputDirLabel)
         layout.addWidget(self.outputDirBtn)
-
         layout.addWidget(self.runBtn)
         layout.addWidget(self.statusLabel)
-
         layout.addWidget(self.progressBar)
 
+    # function to setup the plotting and analysis tab
     def setupPlottingTab(self):
         layout = QVBoxLayout(self.plottingTab)
 
-        # Dropdown for temperature
+        # dropdown for temperature
         self.temperatureLabel = QLabel("Select Desired Temperature Cutoff:", self)
         self.temperatureLabel.setWordWrap(True)
         self.temperatureDropdown = QComboBox(self.plottingTab)
         self.temperatureDropdown.addItems(['Select', '37', '42', '47', '52', '57'])
         self.temperatureDropdown.currentTextChanged.connect(self.updateSelectedTemperature)
 
-        # Input for probability
+        # input for probability
         self.probabilityLabel = QLabel("Select Desired Duplex Probability:", self)
         self.probabilityLabel.setWordWrap(True)
         self.probabilityInput = QLineEdit(self.plottingTab)
@@ -145,19 +138,19 @@ class DNAProbeDesigner(QMainWindow):
         self.probabilityInput.setPlaceholderText("Enter probability (0 - 1)")
         self.probabilityInput.textChanged.connect(self.updateEnteredProbability)
 
-        # Input for MFE 
-        self.mfeLabel = QLabel("Enter Minimum Free Energy Threshold:", self)
+        # input for MFE 
+        self.mfeLabel = QLabel("Enter Minimum Free Energy Threshold (optional):", self)
         self.mfeLabel.setWordWrap(True)
         self.mfeInput = QLineEdit(self.plottingTab)
         self.mfeInput.setValidator(QDoubleValidator())
-        self.mfeInput.setPlaceholderText("Enter MFE (default = 0)")
+        self.mfeInput.setPlaceholderText("Enter MFE")
         self.mfeInput.textChanged.connect(self.updateEnteredMFE)
 
-        # Run button
+        # filter probes
         self.runButton = QPushButton("Filter Probes", self.plottingTab)
         self.runButton.clicked.connect(self.runFilterProbes)
     
-        # Plot button
+        # plot button
         self.plotButton = QPushButton("Plot Results", self.plottingTab)
         self.plotButton.setStyleSheet("""
             QPushButton {
@@ -169,9 +162,10 @@ class DNAProbeDesigner(QMainWindow):
             }""")
         self.plotButton.clicked.connect(self.plotResults)
         
-        # Status
+        # status label
         self.plotStatusLabel = QLabel("", self)
 
+        # add widgets to layout
         layout.addWidget(self.temperatureLabel)
         layout.addWidget(self.temperatureDropdown)
         layout.addWidget(self.probabilityLabel)
@@ -182,6 +176,7 @@ class DNAProbeDesigner(QMainWindow):
         layout.addWidget(self.plotButton)
         layout.addWidget(self.plotStatusLabel)
 
+    # select fasta file dialog
     def openFileNameDialog(self):
         fastaFileName, _ = QFileDialog.getOpenFileName(self, "Select a FASTA file", "", "FASTA Files (*.fasta);;All Files (*)")
         if fastaFileName:
@@ -189,57 +184,29 @@ class DNAProbeDesigner(QMainWindow):
             self.fastaFileName = os.path.basename(self.fastaFilePath).split('.')[0]
             self.fastaLabel.setText(f"FASTA attachment: {fastaFileName}")
 
+    # select bowtie indices dialog
     def selectBowtieDirectory(self):
         bowtieDir = QFileDialog.getExistingDirectory(self, "Select Directory")
         if bowtieDir:
             self.bowtieDirPath = bowtieDir
             self.bowtieLabel.setText(f"Bowtie Directory: {bowtieDir}")
     
+    # store the data when the index name changes
     def updateBowtieIndexName(self, text):
         self.bowtieIndices = text
 
+    # select output dialog
     def selectOutputDirectory(self):
         outputDir = QFileDialog.getExistingDirectory(self, "Select Directory")
         if outputDir:
             self.outputDirPath = outputDir
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
+    # progress bar movement
     def updateProgressBar(self, value):
         self.progressBar.setValue(value)
 
-    def runFilterProbes(self):
-        if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
-            filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
-            self.filteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_filtered.bed'
-            filter_secondary_structure(self.filteredProbeFile, self.filterMFE)
-            self.plotStatusLabel.setText("Filtered Probes Successfully!")
-        elif not self.samFile or not self.bedFile:
-            self.plotStatusLabel.setText("Please Design Probes First!")
-        elif not self.filterTemp:
-            self.plotStatusLabel.setText("Please Select Temp!")
-        elif not self.filterProb:
-            self.plotStatusLabel.setText("Please Select Duplex Probability!")
-    
-    def plotResults(self):
-        plot_duplex_prob(self.filteredProbeFile)
-
-    def updateSelectedTemperature(self, text):
-        self.filterTemp = text
-
-    def updateEnteredProbability(self, text):
-        try:
-            self.filterProb = float(text) if text else None
-        except ValueError:
-            self.filterProb = None
-            self.probabilityInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
-    
-    def updateEnteredMFE(self, text):
-        try:
-            self.filterMFE = float(text) if text else None
-        except ValueError:
-            self.filterMFE = None
-            self.mfeInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
-    
+    # run the initial probe design process
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
             
@@ -301,9 +268,51 @@ class DNAProbeDesigner(QMainWindow):
                 self.statusLabel.setText("Bowtie Indices Name Not Specified!")
             elif not self.outputDirPath:
                 self.statusLabel.setText("Output Directory Not Selected!")
+
+    # update temp if changed
+    def updateSelectedTemperature(self, text):
+        self.filterTemp = text
+
+    # update Pdupe if changed
+    def updateEnteredProbability(self, text):
+        try:
+            self.filterProb = float(text) if text else None
+        except ValueError:
+            self.filterProb = None
+            self.probabilityInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
     
+    # update MFE if changed
+    def updateEnteredMFE(self, text):
+        try:
+            self.filterMFE = float(text) if text else None
+        except ValueError:
+            self.filterMFE = None
+            self.mfeInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
+
+    # filter the probes, differently if the MFE is specified or not
+    def runFilterProbes(self):
+        if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
+            filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
+            self.filteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_filtered.bed'
+            if self.filterMFE:
+                filter_secondary_structure(self.filteredProbeFile, self.filterMFE)
+                self.mfeFilteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_MFE_filtered.bed'
+            self.plotStatusLabel.setText("Filtered Probes Successfully!")
+        elif not self.samFile or not self.bedFile:
+            self.plotStatusLabel.setText("Please Design Probes First!")
+        elif not self.filterTemp:
+            self.plotStatusLabel.setText("Please Select Temp!")
+        elif not self.filterProb:
+            self.plotStatusLabel.setText("Please Select Duplex Probability!")
     
-# Main loop
+    # plot the filteres probes
+    def plotResults(self):
+        if self.filterMFE and self.mfeFilteredProbeFile:
+            plot_duplex_prob(self.mfeFilteredProbeFile)
+        else:
+            plot_duplex_prob(self.filteredProbeFile)    
+    
+# main loop
 app = QApplication(sys.argv)
 mainWindow = DNAProbeDesigner()
 mainWindow.show()
