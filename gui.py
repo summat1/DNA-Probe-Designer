@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit, QComboBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit, QComboBox, QProgressBar
 from PyQt6.QtGui import QDoubleValidator
 from duplex_prob import filter_duplex_prob, plot_duplex_prob
+from secondary_structure import filter_secondary_structure
 import sys
 import subprocess
 import os
@@ -62,6 +63,23 @@ class DNAProbeDesigner(QMainWindow):
         self.outputDirBtn = QPushButton("Select Output Directory", self)
         self.outputDirBtn.clicked.connect(self.selectOutputDirectory)
         
+        # Progress Bar
+        self.progressBar = QProgressBar(self)
+        self.progressBar.setMinimum(0)
+        self.progressBar.setMaximum(100)
+        self.progressBar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid grey;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background-color: #05B8CC;
+                width: 10px; /* size of the chunks */
+                margin: 0.5px;
+            }
+        """)
+       
         # Variable to store the paths
         self.fastaFilePath = ""
         self.bowtieDirPath = ""
@@ -72,6 +90,7 @@ class DNAProbeDesigner(QMainWindow):
         self.bedFile = ""
         self.filterTemp = ""
         self.filterProb = ""
+        self.filterMFE = 0
     
         # Run Button
         self.runBtn = QPushButton("Run Probe Design", self)
@@ -106,6 +125,8 @@ class DNAProbeDesigner(QMainWindow):
         layout.addWidget(self.runBtn)
         layout.addWidget(self.statusLabel)
 
+        layout.addWidget(self.progressBar)
+
     def setupPlottingTab(self):
         layout = QVBoxLayout(self.plottingTab)
 
@@ -123,15 +144,31 @@ class DNAProbeDesigner(QMainWindow):
         self.probabilityInput.setValidator(QDoubleValidator(0.0, 1.0, 10))
         self.probabilityInput.setPlaceholderText("Enter probability (0 - 1)")
         self.probabilityInput.textChanged.connect(self.updateEnteredProbability)
-    
+
+        # Input for MFE 
+        self.mfeLabel = QLabel("Enter Minimum Free Energy Threshold:", self)
+        self.mfeLabel.setWordWrap(True)
+        self.mfeInput = QLineEdit(self.plottingTab)
+        self.mfeInput.setValidator(QDoubleValidator())
+        self.mfeInput.setPlaceholderText("Enter MFE (default = 0)")
+        self.mfeInput.textChanged.connect(self.updateEnteredMFE)
+
         # Run button
         self.runButton = QPushButton("Filter Probes", self.plottingTab)
         self.runButton.clicked.connect(self.runFilterProbes)
     
         # Plot button
         self.plotButton = QPushButton("Plot Results", self.plottingTab)
+        self.plotButton.setStyleSheet("""
+            QPushButton {
+                font-weight: bold;
+                padding: 10px;
+            }
+            QPushButton:hover {
+                background-color: #FF7F7F;
+            }""")
         self.plotButton.clicked.connect(self.plotResults)
-
+        
         # Status
         self.plotStatusLabel = QLabel("", self)
 
@@ -139,6 +176,8 @@ class DNAProbeDesigner(QMainWindow):
         layout.addWidget(self.temperatureDropdown)
         layout.addWidget(self.probabilityLabel)
         layout.addWidget(self.probabilityInput)
+        layout.addWidget(self.mfeLabel)
+        layout.addWidget(self.mfeInput)
         layout.addWidget(self.runButton)
         layout.addWidget(self.plotButton)
         layout.addWidget(self.plotStatusLabel)
@@ -165,10 +204,14 @@ class DNAProbeDesigner(QMainWindow):
             self.outputDirPath = outputDir
             self.outputDirLabel.setText(f"Output Directory: {outputDir}")
 
+    def updateProgressBar(self, value):
+        self.progressBar.setValue(value)
+
     def runFilterProbes(self):
         if self.samFile and self.bedFile and self.filterTemp and self.filterProb:
             filter_duplex_prob(self.samFile, self.bedFile, self.filterTemp, self.filterProb)
             self.filteredProbeFile = f'{self.bedFile.split(".")[0]}_pDup_filtered.bed'
+            filter_secondary_structure(self.filteredProbeFile, float(self.mfeInput.text))
             self.plotStatusLabel.setText("Filtered Probes Successfully!")
         elif not self.samFile or not self.bedFile:
             self.plotStatusLabel.setText("Please Design Probes First!")
@@ -188,7 +231,14 @@ class DNAProbeDesigner(QMainWindow):
             self.filterProb = float(text) if text else None
         except ValueError:
             self.filterProb = None
-            print("Invalid probability entered.")
+            self.probabilityInput.setPlaceholderText("Please Enter A Float Between 0 and 1")
+    
+    def updateEnteredMFE(self, text):
+        try:
+            self.filterMFE = float(text) if text else None
+        except ValueError:
+            self.filterMFE = None
+            self.mfeLabel.setPlaceholderText("Please Enter A Float Between 0 and 1")
     
     def runScript(self):
         if self.fastaFilePath and self.bowtieDirPath and self.bowtieIndices and self.outputDirPath:
@@ -210,6 +260,7 @@ class DNAProbeDesigner(QMainWindow):
                     "-o", fastqOutputFile,
                     # other arguments could go here
                 ]
+                self.updateProgressBar(33)
                 subprocess.run(command, check=True)
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error: {e}")
@@ -224,6 +275,7 @@ class DNAProbeDesigner(QMainWindow):
                 "-i", "C,4", "--score-min", "G,1,4",
                 "-S", self.samFile  # output SAM file
                 ]
+                self.updateProgressBar(66)
                 subprocess.run(command, check=True, shell=True)
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error in bowtie2: {e}")
@@ -236,6 +288,7 @@ class DNAProbeDesigner(QMainWindow):
                     # other arguments could go here
                 ]
                 subprocess.run(command, check=True)
+                self.updateProgressBar(100)
             except subprocess.CalledProcessError as e:
                 self.statusLabel.setText(f"Error: {e}")
 
