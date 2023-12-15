@@ -25,12 +25,13 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
         sam = []
         for line in file:
             parts = line.split('\t')
-            # should be 19 columns
+            # should be 19 columns #
             if len(parts) < 19:
                 raise ValueError("SAM file format is incorrect.")
-            # probe sequence should only have GATC
+            # probe sequence should only have GATC #
             if not set(parts[9]).issubset(set("GATC")):
                 raise ValueError("Probe sequence must contain only G, A, T, C in SAM file.")
+            # alignment score format checking #
             if ':' not in parts[12]:
                 raise ValueError("Alignment score in SAM file does not contain expected characters.")
             align_parts = parts[12].split(':')
