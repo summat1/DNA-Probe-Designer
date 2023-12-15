@@ -72,7 +72,7 @@ class DNAProbeDesigner(QMainWindow):
             }
             QProgressBar::chunk {
                 background-color: #05B8CC;
-                width: 10px; /* size of the chunks */
+                width: 10px;
                 margin: 0.5px;
             }
         """)
@@ -305,7 +305,7 @@ class DNAProbeDesigner(QMainWindow):
         elif not self.filterProb:
             self.plotStatusLabel.setText("Please Select Duplex Probability!")
     
-    # plot the filteres probes
+    # plot the filtered probes
     def plotResults(self):
         if self.filterMFE and self.mfeFilteredProbeFile:
             plot_duplex_prob(self.mfeFilteredProbeFile)
