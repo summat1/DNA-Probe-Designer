@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -37,7 +37,7 @@ class TestCalcDuplexProb(unittest.TestCase):
             calc_duplex_prob(self.valid_sam_filename, self.valid_bed_filename, self.invalid_temp)
         self.assertEqual(str(error.exception), f"Invalid temperature value: {self.invalid_temp}. Valid values are {self.temps}")
 
-    # bad sam file
+    # test bad sam file, impossible sequences in this case
     def test_calc_duplex_prob_wrong_format_sam(self):
         with self.assertRaises(ValueError) as error:
             calc_duplex_prob(self.invalid_sam_filename, self.valid_bed_filename, self.valid_temp)
