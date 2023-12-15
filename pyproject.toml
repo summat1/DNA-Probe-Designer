@@ -1,6 +1,6 @@
 [project]
-name = "DNA_Probe_Designer_longnic_summat"
-version = "0.0.3"
+name = "DNAProbeDesigner"
+version = "0.0.2"
 authors = [
   { name="Nicolas Longhi", email="longnic@uw.edu" },
   { name="Shivesh Ummat", email="summat@uw.edu" }
