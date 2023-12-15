@@ -222,7 +222,7 @@ class DNAProbeDesigner(QMainWindow):
             # fastq file generation
             try:
                 command = [
-                    "python", "Oligominer/blockParse.py",
+                    "python", "DNA-Probe-Designer/Oligominer/blockParse.py",
                     "-f", self.fastaFilePath,
                     "-o", fastqOutputFile,
                     # other arguments could go here
@@ -249,7 +249,7 @@ class DNAProbeDesigner(QMainWindow):
 
             try:
                 command = [
-                    "python", "Oligominer/outputClean.py",
+                    "python", "DNA-Probe-Designer/Oligominer/outputClean.py",
                     "-T", "42",
                     "-f", self.samFile
                     # other arguments could go here
