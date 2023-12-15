@@ -4,7 +4,7 @@ import sys
 import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-relative_path = os.path.normpath(os.path.join(current_path, '../'))
+relative_path = os.path.normpath(os.path.join(current_path, '../DNA-Probe-Designer'))
 sys.path.append(relative_path)
 from duplex_prob import calc_duplex_prob
 from secondary_structure import filter_secondary_structure
