@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from Bio.SeqUtils import GC
@@ -20,16 +21,30 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
     with open(bed_filename) as file:
         probeset = [line.split('\t')[3] for line in file]
 
-    # read in SAM file #
+    # read and check SAM file format #
     with open(sam_filename) as file:
-        sam = [line for line in file]
+        sam = []
+        for line in file:
+            parts = line.split('\t')
+            # should be 19 columns
+            if len(parts) < 19:
+                raise ValueError("SAM file format is incorrect.")
+            # probe sequence should only have GATC
+            if not set(parts[9]).issubset(set("GATC")):
+                raise ValueError("Probe sequence must contain only G, A, T, C in SAM file.")
+            if ':' not in parts[12]:
+                raise ValueError("Alignment score in SAM file does not contain expected characters.")
+            align_parts = parts[12].split(':')
+            if len(align_parts) < 3 or not align_parts[2].isnumeric():
+                raise ValueError("Alignment score format is incorrect in SAM file.") 
+            sam.append(line)
 
+    
     # set up LDA model to predict duplex probability based on probe length, GC content, and alignment score to target seq #
     # Values from models published in Beliveau, et al. (2018) #
     temps = np.array([32, 37, 42, 47, 52, 57])
     if temp not in temps:
-        print(f'hey asshole, temp has to be one of {temps}')
-        return None
+        raise ValueError(f"Invalid temperature value: {temp}. Valid values are {temps}")
     coefs = np.array([[-0.14494789, 0.18791679, 0.02588474],
                     [-0.13364364, 0.22510179, 0.05494031],
                     [-0.09006122, 0.25660706, 0.1078303],
@@ -75,10 +90,56 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
             - filter_prob [float] : duplex probability to filter by
 
     '''
+    # make sure files exist #
+    if not os.path.exists(sam_filename):
+        raise FileNotFoundError(f"The file {sam_filename} does not exist.")
+    if not os.path.exists(bed_filename):
+        raise FileNotFoundError(f"The file {bed_filename} does not exist.")
+
+    # make sure files are correct type #
+    if not sam_filename.endswith('.sam'):
+        raise ValueError(f"The file {sam_filename} is not a SAM file.")
+    if not bed_filename.endswith('.bed'):
+        raise ValueError(f"The file {bed_filename} is not a BED file.")
+    
+    # read and check BED file format #
+    with open(bed_filename) as file:
+        seqs = []
+        for line in file:
+            parts = line.split('\t')
+            if len(parts) < 5:
+                raise ValueError("BED file schema is incorrect.")
+            
+            # check if first part is a string #
+            if not isinstance(parts[0], str):
+                raise ValueError("Invalid chromosome format in BED file.")
+
+            # check if second and third parts are integers (start and end positions) #
+            try:
+                start = int(parts[1])
+                end = int(parts[2])
+            except ValueError:
+                raise ValueError("Start and end positions must be integers in BED file.")
+
+            # check if fourth part contains only G, A, T, C letters (probe sequence) #
+            sequence = parts[3]
+            if not set(sequence).issubset(set("GATC")):
+                raise ValueError("Probe sequence must contain only G, A, T, C in BED file.")
+
+            # ensure the alignment score is a float #
+            score_str = parts[4].strip() 
+            try:
+                score = float(score_str)
+            except ValueError:
+                raise ValueError("Score must be a floating-point number in BED file.")
+            
+            # store the sequence
+            seqs.append(sequence)
+
     # collate probabilities #
     temps = [32, 37, 42, 47, 52, 57]
-    with open(bed_filename) as file:
-        seqs = [line.split('\t')[3] for line in file]
+
+    # run the duplex prob calculation #
     all_probs = [calc_duplex_prob(sam_filename, bed_filename, temp) for temp in temps]
     all_probs = np.swapaxes(all_probs, 0, 1)
 
@@ -113,7 +174,7 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
         next(file)
         all_probs = [line.split('\t')[2:] for line in file]
 
-    # formatting probs back to floats because im bad at coding #
+    # formatting probs back to floats #
     all_probs = [probs[0].split(',') for probs in all_probs]
     all_probs = [[float(prob.strip(' [').strip('] \n')) for prob in probs] for probs in all_probs]
 
@@ -148,5 +209,5 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
         plt.show()
 
     else:
-        print('hey asshole, probe_num argument needs to be \'all\' (to plot all probes) \
+        raise ValueError('Probe_num argument needs to be \'all\' (to plot all probes) \
               or an int (to plot a single probe where probe_num corresponds to a line in the .bed file)')
