@@ -27,8 +27,7 @@ def calc_duplex_prob(sam_filename, bed_filename, temp):
     # Values from models published in Beliveau, et al. (2018) #
     temps = np.array([32, 37, 42, 47, 52, 57])
     if temp not in temps:
-        print(f'Temperature must be one of {temps}')
-        return None
+        raise ValueError(f"Invalid temperature value: {temp}. Valid values are {temps}")
     coefs = np.array([[-0.14494789, 0.18791679, 0.02588474],
                     [-0.13364364, 0.22510179, 0.05494031],
                     [-0.09006122, 0.25660706, 0.1078303],

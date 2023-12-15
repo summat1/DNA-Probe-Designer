@@ -10,6 +10,10 @@ def filter_secondary_structure(bed_filename, filter_MFE):
                                   (probes with low MFEs have stable secondary structures and are less likely
                                    to form duplexes with target sequence)
     '''
+    try:
+        filter_MFE = float(filter_MFE)
+    except ValueError:
+        raise TypeError(f"MFE must be a float, unacceptable value: {filter_MFE}")
     # collate original file lines #
     with open(bed_filename, 'r') as file:
         next(file)
