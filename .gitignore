@@ -6,6 +6,8 @@
 *.sam
 # bowtie2 indices file
 *.bt2
+# output files
+.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
