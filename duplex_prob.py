@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from Bio.SeqUtils import GC
@@ -84,16 +85,16 @@ def filter_duplex_prob(sam_filename, bed_filename, filter_temp, filter_prob):
     # filter out probes which do not meet temp / prob thresholds #
     filter_temp = int(filter_temp)
     temp_to_index = {32: 0, 37: 1, 42:2, 47: 3, 52: 4, 57: 5}
-    all_probs = [probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob]
+    all_probs = np.array([probs for probs in all_probs if probs[temp_to_index[filter_temp]] > filter_prob])
 
-    # for probes which passed filter, write sequences and probabilities to a file #
-    output_filename = bed_filename.split('.')[0] + '_pDup_filtered.bed'
-    with open(output_filename, 'w') as file:
-        # header line #
-        file.write(f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob} \n')
-        # write as probe_number, probe_sequence, and duplex_probabilities #
-        for k, seq, probs in zip(range(len(seqs)), seqs, all_probs):
-            file.write(f'{k+1} \t {seq} \t {[round(prob, 8) for prob in probs]} \n')
+    # for probes which passed filter, write sequences and probabilities to a .csv file #
+    output_filename = bed_filename.split('.')[0] + '_pDup_filtered.csv'
+    df_dict = {}
+    for k, temp in zip(range(6), temps):
+        df_dict[f'pDup_{temp}'] = all_probs[:, k]
+    df = pd.DataFrame.from_dict(df_dict)
+    # df.loc[len(df)] = f'{len(all_probs)} probes passed filtering with thresholds set to T={filter_temp}C and PDup={filter_prob}'
+    df.to_csv(output_filename)
 
 ###################################################################################################
 
@@ -104,18 +105,8 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
             - filtered_filename [str] : relative path to .txt file containing sequences and probabilities for filtered probes
             - probe_num [int] : choose to plot duplex prob for a single probe (default = 'all')
     '''
-
-    # read probe sequences and duplex probabilities from filtered .bed file #
-    with open(filtered_filename, 'r') as file:
-        next(file)
-        seqs = [line.split('\t')[1].strip() for line in file]
-    with open(filtered_filename, 'r') as file:
-        next(file)
-        all_probs = [line.split('\t')[2:] for line in file]
-    
-    # formatting probs back to floats because im bad at coding
-    all_probs = [probs[0].split(',') for probs in all_probs]
-    all_probs = [[float(prob.strip(' [').strip('] \n')) for prob in probs] for probs in all_probs]
+    df = pd.read_csv(filtered_filename)
+    all_probs = np.array([df.loc[k].values for k in range(len(df)-1)])
 
     # set temps
     temps = [32, 37, 42, 47, 52, 57]
@@ -124,7 +115,7 @@ def plot_duplex_prob(filtered_filename, probe_num='all'):
     if probe_num == 'all':
         plt.figure(figsize=(8, 6))
         for k in range(len(all_probs)):
-            plt.plot(temps, all_probs[k])
+            plt.plot(temps, all_probs[k, 1:])
         plt.xticks(temps)
         plt.ylim([-0.075, 1])
         plt.xlabel('Temperature (C)', size=15)
