@@ -1,3 +1,1 @@
-print('test')
-
-import DNAProbeDesigner
+from DNAProbeDesigner.gui import run_gui

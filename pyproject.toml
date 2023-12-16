@@ -1,6 +1,6 @@
 [project]
 name = "DNAProbeDesigner"
-version = "0.0.2"
+version = "0.0.4"
 authors = [
   { name="Nicolas Longhi", email="longnic@uw.edu" },
   { name="Shivesh Ummat", email="summat@uw.edu" }
