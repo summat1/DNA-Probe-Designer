@@ -12,5 +12,14 @@ Once *bowtie2* is sucessfully installed and the user has downloaded the referenc
 
 Once this step has been completed, users are ready to run the DNA-Probe-Designer package. (Note: this step will have to be completed each time the user wishes to design probes against a new reference genome).
 
+Once this setup step is complete, the GUI can be accessed with the following Python code:
+
+```
+from DNAProbeDesigner.gui import run_gui
+run_gui()
+```
+
+For help navigating the GUI, watch the demo video (Accessible in the `examples` directory on GitHub: https://github.com/summat1/DNA-Probe-Designer)
+
 **Questions?**<br>
 Any questions or issues regarding this package can be directed to longnic@uw.edu or summat@uw.edu.

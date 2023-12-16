@@ -1,3 +1,7 @@
+'''
+This code is from an existing set of scripts called OligoMiner.
+'''
+
 #!/usr/bin/env python
 # --------------------------------------------------------------------------
 # OligoMiner

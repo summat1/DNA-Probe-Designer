@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QTabWidget, QPushButton, QFileDialog, QVBoxLayout, QWidget, QLabel, QLineEdit, QComboBox, QProgressBar
 from PyQt6.QtGui import QDoubleValidator
-from duplex_prob import filter_duplex_prob, plot_duplex_prob
-from secondary_structure import filter_secondary_structure
+from DNAProbeDesigner.duplex_prob import filter_duplex_prob, plot_duplex_prob
+from DNAProbeDesigner.secondary_structure import filter_secondary_structure
 import sys
 import subprocess
 import os
@@ -223,7 +223,7 @@ def run_gui():
                 # fastq file generation
                 try:
                     command = [
-                        "python", "DNA-Probe-Designer/Oligominer/blockParse.py",
+                        "python", "DNAProbeDesigner/blockParse.py",
                         "-f", self.fastaFilePath,
                         "-o", fastqOutputFile,
                         # other arguments could go here
@@ -250,7 +250,7 @@ def run_gui():
 
                 try:
                     command = [
-                        "python", "DNA-Probe-Designer/Oligominer/outputClean.py",
+                        "python", "DNAProbeDesigner/outputClean.py",
                         "-T", "42",
                         "-f", self.samFile
                         # other arguments could go here
